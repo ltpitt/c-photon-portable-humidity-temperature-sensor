@@ -9,11 +9,10 @@
 #include "Adafruit_GFX.h" // Adafruit GFX library
 #include "Adafruit_PCD8544.h" // Adafruit Library for Nokia 5110 LCD display
 
-//SYSTEM_MODE(SEMI_AUTOMATIC)
-//SYSTEM_THREAD(ENABLED)
-//Particle.connect();
+// This settings will allow the product to work even without Particle Cloud connection
+SYSTEM_MODE(SEMI_AUTOMATIC)
+SYSTEM_THREAD(ENABLED)
   
-
 // HttpClient initialization
 HttpClient http;
 // Headers currently need to be set at init, useful for API keys etc.
@@ -63,10 +62,11 @@ double soc = 0; // Variable to keep track of LiPo state-of-charge (SOC)
 bool alert; // Variable to keep track of whether alert has been triggered
 char batteryDataJsonString[64]; // Json containing battery data to be sent
 
+bool isSplashscreenShowed = false;
 
 void setup()   {
     
-    //getBatteryData();
+    getBatteryData();
     
     Serial.begin(9600); // Serial setup
     
@@ -87,8 +87,7 @@ void setup()   {
     display.clearDisplay(); // Clear LCD display
     display.setTextSize(1); // Set display text size
     display.setTextColor(BLACK); // Set display text color
-    
-    
+
 }
 
 
@@ -97,10 +96,12 @@ void loop() {
     getDHT22data(); // Get Humidity and Temperature data from DHT22
     displayTempHum(); // Show Humidity and Temperature retrieved on LCD
 
+    Particle.connect();
 
     if (temp > 5.0) {
         // If sensor returned a good reading we show it on LCD for a bit
         delay(30000);
+        if (Particle.connected()) {
         // And then we publish it online
         // Uncomment or comment below rows accoring to the sensor you are going to flash
         Particle.publish("1_floor_temp", String(temp,1), PRIVATE);
@@ -108,12 +109,15 @@ void loop() {
         //Particle.publish("2_floor_temp", String(temp,1), PRIVATE);
         //Particle.publish("2_floor_hum", String(umid,1), PRIVATE);
         isOtaEnabled(); // Check if OTA is enabled and act accordingly
-
+        } else {
+        System.sleep(SLEEP_MODE_DEEP,900);
+        }
     }
   
 }
 
 void getBatteryData() {
+ 
     // Set up the MAX17043 LiPo fuel gauge:
 	lipo.begin(); // Initialize the MAX17043 LiPo fuel gauge
 	// Quick start restarts the MAX17043 in hopes of getting a more accurate
@@ -145,7 +149,7 @@ void getBatteryData() {
 	Serial.println(" %");
 	Serial.println();
 
-    if (alert != 0) {
+    if (alert != 0 and Particle.connected()) {
     	sendHttpRequest("post", "192.168.178.25", 8080, "/portable-sensor/battery", String(soc,1));
     }
 
@@ -153,6 +157,21 @@ void getBatteryData() {
 }
 
 void displayTempHum() {
+    
+    if (not isSplashscreenShowed) {
+
+        display.clearDisplay(); // Clear LCD display
+        display.setCursor(0,0); // Move display cursor to row 0, col 0
+        display.println("Termometretto"); // Print current temperature value using a single decimal
+        display.println("      by"); // Print current humidity value using a single decimal
+        display.println(" Pipisoft ltd"); // Print current humidity value using a single decimal
+        display.println(""); // Print current humidity value using a single decimal
+        display.println("<3 <3 :* <3 <3"); // Print current humidity value using a single decimal
+        display.display(); // Show information on display
+        delay(5000);
+        isSplashscreenShowed = false;
+
+    }
 
     display.clearDisplay(); // Clear LCD display
     display.setCursor(0,0); // Move display cursor to row 0, col 0
@@ -280,6 +299,9 @@ void sendHttpRequest(String method, String hostname, int port, String path, Stri
         
     }
 }
+
+
+
 
 void isOtaEnabled() {
     // Check if OTA is enabled via http
