@@ -99,8 +99,8 @@ void loop() {
     Particle.connect();
 
     if (temp > 5.0) {
-        // If sensor returned a good reading we show it on LCD for a bit
-        delay(30000);
+        // If sensor returned a good reading we show it on LCD
+        delay(30000); // Then we wait for a bit
         if (Particle.connected()) {
         // And then we publish it online
         // Uncomment or comment below rows accoring to the sensor you are going to flash
@@ -110,7 +110,11 @@ void loop() {
         //Particle.publish("2_floor_hum", String(umid,1), PRIVATE);
         isOtaEnabled(); // Check if OTA is enabled and act accordingly
         } else {
-        System.sleep(SLEEP_MODE_DEEP,900);
+        // Following two rows: closest energy consumption to complete shutdown state
+        Cellular.off();
+        System.sleep(SLEEP_MODE_DEEP);
+        // Deep sleep for limited time / Uncomment if needed
+        //System.sleep(SLEEP_MODE_DEEP, 3600);
         }
     }
   
@@ -135,8 +139,7 @@ void getBatteryData() {
 	// lipo.getAlert() returns a 0 or 1 (0=alert not triggered)
 	alert = lipo.getAlert();
 
-	// Those variables will update to the Spark Cloud, but we'll also print them
-	// locally over serial for debugging:
+	// Those variables will be printed them locally over serial for debugging:
 	Serial.print("Voltage: ");
 	Serial.print(voltage);  // Print the battery voltage
 	Serial.println(" V");
@@ -315,7 +318,7 @@ void isOtaEnabled() {
     if (response.body=="off") {
         digitalWrite(display_led, LOW); // Turn oFF LCD display led
         // Put Particle Photon in deep sleep for 900 seconds (15 minutes)
-        System.sleep(SLEEP_MODE_DEEP,900);
+        System.sleep(SLEEP_MODE_DEEP, 3600);
     } else {
         // Turn on onboard led
         digitalWrite(D7, HIGH);
