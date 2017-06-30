@@ -110,8 +110,7 @@ void loop() {
         //Particle.publish("2_floor_hum", String(umid,1), PRIVATE);
         isOtaEnabled(); // Check if OTA is enabled and act accordingly
         } else {
-        // Following two rows: closest energy consumption to complete shutdown state
-        Cellular.off();
+        // Deep sleep for unlimited time (Manual Mode)
         System.sleep(SLEEP_MODE_DEEP);
         // Deep sleep for limited time / Uncomment if needed
         //System.sleep(SLEEP_MODE_DEEP, 3600);
