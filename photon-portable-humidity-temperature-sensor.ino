@@ -55,7 +55,7 @@ void dht_wrapper() {
     DHT.isrCallback();
 }
 
-int display_led = D5; // Nokia 5110 LCD Display led will be connected to D0
+int display_led = D5; // Nokia 5110 LCD Display led will be connected to D5
 
 double voltage = 0; // Variable to keep track of LiPo voltage
 double soc = 0; // Variable to keep track of LiPo state-of-charge (SOC)
@@ -83,7 +83,7 @@ void setup()   {
     // Setting up LCD display
     digitalWrite(display_led, HIGH); // Turn on LCD display led
     display.begin(); // LCD display initialization
-    display.setContrast(55); // Setting LCD display contrast
+    display.setContrast(55); // Setting LCD display contrast e.g 200 is darker than 400
     display.clearDisplay(); // Clear LCD display
     display.setTextSize(1); // Set display text size
     display.setTextColor(BLACK); // Set display text color
